@@ -19,6 +19,7 @@ class PPOAgent:
                 use_wandb=True, use_tensorboard=True, experiment_name=None):
         
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print(self.device)
         self.seed = seed
         
         # Environment setup

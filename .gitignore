@@ -2,7 +2,10 @@ __pycache__/
 *.pyc
 *.csv
 
-
+src/videos
+src/wandb
+src/runs
+src/models
 venv/
 .venv/
 .env/

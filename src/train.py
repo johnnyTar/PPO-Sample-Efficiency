@@ -28,11 +28,11 @@ def parse_args():
                         help='Seed of the experiment for reproducibility')
     
     # Environment
-    parser.add_argument('--gym-id', type=str, default='MiniGrid-Empty-5x5-v0',
+    parser.add_argument('--gym-id', type=str, default='MiniGrid-DoorKey-5x5-v0',
                         help='ID of the Gym environment to use')
     
     # Training hyperparameters
-    parser.add_argument('--total-timesteps', type=int, default=10000, # 1_000_000
+    parser.add_argument('--total-timesteps', type=int, default=1_000_000, # 1_000_000
                         help='Total number of timesteps to train the agent')
     parser.add_argument('--learning-rate', type=float, default=1e-4,
                         help='Learning rate for the optimizer')
@@ -188,7 +188,7 @@ if __name__ == "__main__":
     
     # Train with parsed arguments
     # mean_reward, std_reward = main(args)
-    #results = main(args)
+    results = main(args)
     
     print(f"\n{'='*60}")
     print("TRAINING COMPLETED")
