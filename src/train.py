@@ -28,7 +28,7 @@ def parse_args():
                         help='Seed of the experiment for reproducibility')
     
     # Environment
-    parser.add_argument('--gym-id', type=str, default='MiniGrid-DoorKey-5x5-v0',
+    parser.add_argument('--gym-id', type=str, default='MiniGrid-DoorKey-8x8-v0',
                         help='ID of the Gym environment to use')
     
     # Training hyperparameters
@@ -84,7 +84,7 @@ def train_single_seed(args, seed):
     env = RecordVideo(
         env,
         f'videos/{run_name}',
-        episode_trigger=lambda ep: ep % 10 == 0,  # Record every 10 episodes
+        episode_trigger=lambda ep: ep % 250 == 0,  # Record every 10 episodes
         video_length=200
     )
     

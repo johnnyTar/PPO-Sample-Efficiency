@@ -6,6 +6,7 @@ src/videos
 src/wandb
 src/runs
 src/models
+
 venv/
 .venv/
 .env/
