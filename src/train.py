@@ -36,7 +36,7 @@ def parse_args():
                         help='Total number of timesteps to train the agent')
     parser.add_argument('--learning-rate', type=float, default=1e-4,
                         help='Learning rate for the optimizer')
-    parser.add_argument('--rollout-size', type=int, default=256,
+    parser.add_argument('--rollout-size', type=int, default=1024,
                         help='Number of steps to collect per rollout')
     
     # PPO specific parameters

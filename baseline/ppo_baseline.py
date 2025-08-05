@@ -8,7 +8,7 @@ from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.monitor import Monitor
 
 def make_env():
-    env = gym.make("MiniGrid-Empty-5x5-v0", render_mode="rgb_array")
+    env = gym.make("MiniGrid-DoorKey-8x8-v0", render_mode="rgb_array")
     env = RGBImgObsWrapper(env)
     env = ImgObsWrapper(env)
     env = Monitor(env)

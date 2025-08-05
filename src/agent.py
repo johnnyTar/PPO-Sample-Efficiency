@@ -291,6 +291,7 @@ class PPOAgent:
 
             print(f"Update {self.update_count}")
             print(f"Timesteps: {self.total_timesteps}/{total_timesteps}")
+            print(f"FPS: {fps:.2f}")    
             print(f"Avg Episode Reward: {avg_reward:.2f}")
             print(f"Avg Episode Length: {avg_length:.2f}")
             print("-" * 50)
