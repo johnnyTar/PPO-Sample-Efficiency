@@ -28,11 +28,11 @@ def parse_args():
                         help='Seed of the experiment for reproducibility')
     
     # Environment
-    parser.add_argument('--gym-id', type=str, default='MiniGrid-DoorKey-8x8-v0',
+    parser.add_argument('--gym-id', type=str, default='MiniGrid-DoorKey-6x6-v0',
                         help='ID of the Gym environment to use')
     
     # Training hyperparameters
-    parser.add_argument('--total-timesteps', type=int, default=1_000_000, # 1_000_000
+    parser.add_argument('--total-timesteps', type=int, default=500_000, # 500_000 1_000_000
                         help='Total number of timesteps to train the agent')
     parser.add_argument('--learning-rate', type=float, default=1e-4,
                         help='Learning rate for the optimizer')
@@ -63,14 +63,15 @@ def parse_args():
 
 
 def train_single_seed(args, seed):
-    """Main training script with command line arguments"""
+    '''Main training script with command line arguments'''
     
     # Set seed for reproducibility
     set_seed(seed)
     
     # Create MiniGrid environment
-    env = gym.make(args.gym_id, render_mode="rgb_array")
+    env = gym.make(args.gym_id, render_mode='rgb_array')
     env = FlatObsWrapper(env)  # Flatten observation for easier handling
+    env = TimeLimit(env, max_episode_steps=1000)
 
     env.reset(seed=seed)
     env.action_space.seed(seed)
@@ -113,44 +114,45 @@ def train_single_seed(args, seed):
         )
     
     # Evaluate the trained agent
-    print(f"\nEvaluating trained agent (seed {seed})")
+    print(f'\nEvaluating trained agent (seed {seed})')
     mean_reward, std_reward = agent.evaluate(num_episodes=10, log_video=False)
-    print(f"Mean evaluation reward: {mean_reward:.2f} ± {std_reward:.2f}")
+    print(f'Mean evaluation reward: {mean_reward:.2f} ± {std_reward:.2f}')
     
     # Save the trained model with seed in filename
     model_dir = os.path.join('models', run_name)
     os.makedirs(model_dir, exist_ok=True)
-    model_path = agent.save_model(os.path.join(model_dir, f"{run_name}.pth"))
+    model_path = agent.save_model(os.path.join(model_dir, f'{run_name}.pth'))
 
-    print(f"Training completed")
+    print(f'Training completed')
     
     if agent.logger.use_wandb:
         wandb_url = agent.logger.get_wandb_url()
         if wandb_url:
-            print(f"- WandB: {wandb_url}")
+            print(f'- WandB: {wandb_url}')
     
     if agent.logger.use_tensorboard:
-        print(f"- TensorBoard: tensorboard --logdir runs/{agent.logger.experiment_name}")
+        print(f'TensorBoard: {agent.logger.experiment_name}')
 
     return {
         'seed': seed,
         'mean_reward': mean_reward,
         'std_reward': std_reward,
         'learning_curve': agent.get_learning_curve(),
+        'success_rate_curve': agent.get_success_rate_curve(),
         'episode_length_curve': agent.get_episode_length_curve(),
         'policy_behavior_curve': agent.get_policy_behavior_curve(),
     }
 
 
 def main(args):
-    """Main training script with multiple seeds"""
+    '''Main training script with multiple seeds'''
     
     results = []
     
     for seed in args.seeds:
-        print(f"\n{'='*60}")
-        print(f"Training with seed: {seed}")
-        print(f"{'='*60}")
+        print(f'\n{"="*60}')
+        print(f'Training with seed: {seed}')
+        print(f'{"="*60}')
         
         result = train_single_seed(args, seed)
         results.append(result)
@@ -158,39 +160,39 @@ def main(args):
     # Save and print summary results
     results_dir = 'results'
     os.makedirs(results_dir, exist_ok=True)
-    results_file = os.path.join(results_dir, f"{args.gym_id}_results.json")
+    results_file = os.path.join(results_dir, f'{args.gym_id}_results.json')
     with open(results_file, 'w') as f:
         json.dump(results, f, indent=2)
     
-    print(f"\n{'='*60}")
-    print("SUMMARY RESULTS")
-    print(f"{'='*60}")
+    print(f'\n{"="*60}')
+    print('SUMARY RESULTS')
+    print(f'{"="*60}')
     all_means = [r['mean_reward'] for r in results]
-    print(f"Overall Mean ± Std: {np.mean(all_means):.2f} ± {np.std(all_means):.2f}")
-    print(f"Results saved to: {results_file}")
+    print(f'Overall Mean +- Std: {np.mean(all_means):.2f} +- {np.std(all_means):.2f}')
+    print(f'Results saved to: {results_file}')
     
     for result in results:
-        print(f"Seed {result['seed']}: {result['mean_reward']:.2f} ± {result['std_reward']:.2f}")
+        print(f"Seed {result['seed']}: {result['mean_reward']:.2f} +- {result['std_reward']:.2f}")
     
     return results
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     # Parse command line arguments
     args = parse_args()
     
-    print(f"\n{'='*60}")
-    print(f"Training with configuration:")
-    print(f"{'='*60}")
+    print(f'\n{"="*60}')
+    print(f'Training with configs:')
+    print(f'{"="*60}')
     for arg, value in vars(args).items():
-        print(f"{arg}: {value}")
-    print(f"{'='*60}")
+        print(f'{arg}: {value}')
+    print(f'{"="*60}')
     
     # Train with parsed arguments
     # mean_reward, std_reward = main(args)
     results = main(args)
     
-    print(f"\n{'='*60}")
-    print("TRAINING COMPLETED")
-    print(f"{'='*60}")
-    # print(f"Final performance: {mean_reward:.2f} ± {std_reward:.2f}")
+    print(f'\n{"="*60}')
+    print('TRAINING COMPLETED')
+    print(f'{"="*60}')
+    # print(f'Final performance: {mean_reward:.2f} ± {std_reward:.2f}')

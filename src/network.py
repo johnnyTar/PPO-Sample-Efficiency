@@ -4,7 +4,7 @@ from torch.distributions import Categorical
 
 
 class PPONetwork(nn.Module):
-    """Neural network for PPO with shared layers and separate heads for actor/critic"""
+    '''Neural network for PPO with shared layers and separate heads for actor/critic'''
     
     def __init__(self, obs_dim, action_dim, hidden_dim=256):
         super().__init__()

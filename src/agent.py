@@ -12,13 +12,13 @@ from logger import PPOLogger
 
 
 class PPOAgent:
-    """PPO Agent for MiniGrid environments with WandB and TensorBoard logging"""
+    '''PPO Agent for MiniGrid environments with WandB and TensorBoard logging'''
     
     def __init__(self, env, seed=42, hidden_dim=256, lr=3e-4, gamma=0.99, lam=0.95, 
                 clip_ratio=0.2, vf_coef=0.5, ent_coef=0.01, max_grad_norm=0.5, batch_size=64,
                 use_wandb=True, use_tensorboard=True, experiment_name=None):
         
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print(self.device)
         self.seed = seed
         
@@ -43,22 +43,25 @@ class PPOAgent:
         # Training tracking
         self.episode_rewards = deque(maxlen=100)
         self.episode_lengths = deque(maxlen=100)
+        self.episode_successes = deque(maxlen=100)
+        
         # Track sample efficiency experiments 
         self.learning_curve = []  # To store (timesteps, avg_reward) pair
         self.episode_length_curve = []  # Track episodic lengths over time
+        self.success_rate_curve = [] # Track success rates over time
         self.policy_behavior_curve = []  # Track policy losses and other behaviors
         
         # Logging setup
         config = {
-            "obs_dim": self.obs_dim,
-            "action_dim": self.action_dim,
-            "gamma": self.gamma,
-            "lambda": self.lam,
-            "clip_ratio": self.clip_ratio,
-            "vf_coef": self.vf_coef,
-            "ent_coef": self.ent_coef,
-            "max_grad_norm": self.max_grad_norm,
-            "device": str(self.device)
+            'obs_dim': self.obs_dim,
+            'action_dim': self.action_dim,
+            'gamma': self.gamma,
+            'lambda': self.lam,
+            'clip_ratio': self.clip_ratio,
+            'vf_coef': self.vf_coef,
+            'ent_coef': self.ent_coef,
+            'max_grad_norm': self.max_grad_norm,
+            'device': str(self.device)
         }
         
         self.logger = PPOLogger(
@@ -76,7 +79,7 @@ class PPOAgent:
         self.start_time = time.time()
     
     def collect_rollout(self, buffer_size=2048):
-        """Collect rollout data"""
+        '''Collect rollout data'''
         buffer = PPOBuffer(buffer_size, self.obs_dim, self.device, 
                         gamma=self.gamma, lam=self.lam)
         
@@ -85,16 +88,23 @@ class PPOAgent:
         
         ep_reward = 0
         ep_length = 0
+        episodes_completed = 0
+        action_counts = torch.zeros(self.action_dim)
+        total_reward_in_rollout = 0
+        # max_episode_reward = 0
         
         # Metrics for this rollout
         rollout_rewards = []
         rollout_lengths = []
+        
+        action_counts = torch.zeros(self.action_dim)
         
         for step in range(buffer_size):
             # Get action from policy
             with torch.no_grad():
                 action, log_prob, _, value = self.network.get_action_and_value(obs)
             
+            action_counts[action.item()] += 1
             # Take step in environment
             next_obs, reward, terminated, truncated, _ = self.env.step(action.cpu().numpy())
             done = terminated or truncated
@@ -105,17 +115,23 @@ class PPOAgent:
             # Update episode tracking
             ep_reward += reward
             ep_length += 1
+            total_reward_in_rollout += reward
             
             # Move to next observation
             obs = torch.FloatTensor(next_obs).to(self.device)
             
             if done:
+                success = terminated # success = ep_reward > 0.9
                 # Finish the trajectory
                 buffer.finish_path()
+                episodes_completed += 1
+                # max_episode_reward = max(max_episode_reward, ep_reward)
+                print(f'Episode completed: reward={ep_reward}, truncated={truncated}, success={success}, length={ep_length}')
                 
                 # Store episode stats
                 self.episode_rewards.append(ep_reward)
                 self.episode_lengths.append(ep_length)
+                self.episode_successes.append(success)
                 rollout_rewards.append(ep_reward)
                 rollout_lengths.append(ep_length)
                 
@@ -130,22 +146,30 @@ class PPOAgent:
             with torch.no_grad():
                 _, _, _, last_val = self.network.get_action_and_value(obs)
             buffer.finish_path(last_val.item())
+            
+        # logging
+        action_probs = action_counts / buffer_size
+        
+        # print(f'Rollout completed: {episodes_completed} episodes finished')
+        print(f"Action distribution: {[f'{p:.3f}' for p in action_probs.tolist()]}")
+        print(f'Total rollout reward: {total_reward_in_rollout}')
+        # print(f'Max episode reward: {max_episode_reward}')
         
         # Log rollout metrics
         if rollout_rewards:
             rollout_metrics = {
-                "rollout/mean_reward": np.mean(rollout_rewards),
-                "rollout/max_reward": np.max(rollout_rewards),
-                "rollout/min_reward": np.min(rollout_rewards),
-                "rollout/mean_length": np.mean(rollout_lengths),
-                "rollout/num_episodes": len(rollout_rewards)
+                'rollout/mean_reward': np.mean(rollout_rewards),
+                'rollout/max_reward': np.max(rollout_rewards),
+                'rollout/min_reward': np.min(rollout_rewards),
+                'rollout/mean_length': np.mean(rollout_lengths),
+                'rollout/num_episodes': len(rollout_rewards)
             }
             self.logger.log_metrics(rollout_metrics, self.total_timesteps)
         
         return buffer.get_batch()
     
     def update_policy(self, batch, update_epochs=10, minibatch_size=64):
-        """Update policy using PPO loss"""
+        '''Update policy using PPO loss'''
         
         obs = batch['obs']
         act = batch['act']
@@ -215,13 +239,13 @@ class PPOAgent:
         
         # Log training metrics
         training_metrics = {
-            "train/policy_loss": np.mean(policy_losses),
-            "train/value_loss": np.mean(value_losses),
-            "train/entropy_loss": np.mean(entropy_losses),
-            "train/total_loss": np.mean(total_losses),
-            "train/kl_divergence": np.mean(kl_divergences),
-            "train/clip_fraction": np.mean(clip_fractions),
-            "train/learning_rate": self.optimizer.param_groups[0]['lr']
+            'train/policy_loss': np.mean(policy_losses),
+            'train/value_loss': np.mean(value_losses),
+            'train/entropy_loss': np.mean(entropy_losses),
+            'train/total_loss': np.mean(total_losses),
+            'train/kl_divergence': np.mean(kl_divergences),
+            'train/clip_fraction': np.mean(clip_fractions),
+            'train/learning_rate': self.optimizer.param_groups[0]['lr']
         }
         self.logger.log_metrics(training_metrics, self.total_timesteps)
 
@@ -233,11 +257,11 @@ class PPOAgent:
         }
     
     def train(self, total_timesteps=1000000, rollout_size=2048, log_interval=10):
-        """Main training loop"""
+        '''Main training loop'''
         
-        print("Starting PPO training...")
-        print(f"Device: {self.device}")
-        print(f"Observation dim: {self.obs_dim}, Action dim: {self.action_dim}")
+        print('Starting PPO training...')
+        print(f'Device: {self.device}')
+        print(f'Observation dim: {self.obs_dim}, Action dim: {self.action_dim}')
         print(f"WandB: {'enabled' if self.logger.use_wandb else 'disabled'}")
         print(f"TensorBoard: {'enabled' if self.logger.use_tensorboard else 'disabled'}")
         
@@ -253,52 +277,63 @@ class PPOAgent:
             # Logging and progress tracking
             avg_reward = np.mean(self.episode_rewards) if self.episode_rewards else 0
             avg_length = np.mean(self.episode_lengths) if self.episode_lengths else 0
+            success_rate = np.mean(self.episode_successes) if self.episode_successes else 0
             
             # Calculate training speed
             elapsed_time = time.time() - self.start_time
             fps = self.total_timesteps / elapsed_time if elapsed_time > 0 else 0
             
-            # Log general metrics
+            # Log wandb metrics
             general_metrics = {
-                "general/timesteps": self.total_timesteps,
-                "general/updates": self.update_count,
-                "general/fps": fps,
-                "general/avg_episode_reward": avg_reward,
-                "general/avg_episode_length": avg_length,
-                "general/num_episodes": len(self.episode_rewards)
+                'general/timesteps': self.total_timesteps,
+                'general/updates': self.update_count,
+                'general/fps': fps,
+                'general/avg_episode_reward': avg_reward,
+                'general/avg_episode_length': avg_length,
+                'general/success_rate': success_rate,
+                'general/num_episodes': len(self.episode_rewards),
             }
             self.logger.log_metrics(general_metrics, self.total_timesteps)
             
             # Store learning curve data  (For sample efficency)
             self.learning_curve.append({
-                "timesteps": self.total_timesteps,
-                "avg_reward": avg_reward
+                'timesteps': self.total_timesteps,
+                'avg_reward': avg_reward
             })
             
             # Store additional curves
             self.episode_length_curve.append({
-                "timesteps": self.total_timesteps,
-                "avg_episode_length": avg_length
+                'timesteps': self.total_timesteps,
+                'avg_episode_length': avg_length
             })
-
+            
+            self.success_rate_curve.append({
+                'timesteps': self.total_timesteps,
+                'success_rate': success_rate
+            })
+            
             self.policy_behavior_curve.append({
-                "timesteps": self.total_timesteps,
-                "policy_loss": policy_metrics['policy_loss'],
-                "total_loss": policy_metrics['total_loss'],
-                "entropy_loss": policy_metrics['entropy_loss'],
-                "kl_divergence": policy_metrics['kl_divergence']
+                'timesteps': self.total_timesteps,
+                'policy_loss': policy_metrics['policy_loss'],
+                'total_loss': policy_metrics['total_loss'],
+                'entropy_loss': policy_metrics['entropy_loss'],
+                'kl_divergence': policy_metrics['kl_divergence']
             })
+            
+            
 
-            print(f"Update {self.update_count}")
-            print(f"Timesteps: {self.total_timesteps}/{total_timesteps}")
-            print(f"FPS: {fps:.2f}")    
-            print(f"Avg Episode Reward: {avg_reward:.2f}")
-            print(f"Avg Episode Length: {avg_length:.2f}")
-            print("-" * 50)
+
+            print(f'Update {self.update_count}')
+            print(f'Timesteps: {self.total_timesteps}/{total_timesteps}')
+            print(f'FPS: {fps:.2f}')    
+            print(f'Avg Episode Reward: {avg_reward:.2f}')
+            print(f'Avg Episode Length: {avg_length:.2f}')
+            print(f'Success Rate: {success_rate:.2f}')
+            print('-' * 50)
         
         # Close logging
         
-        print("Training completed")
+        print('Training completed')
 
     def get_learning_curve(self):
         return self.learning_curve
@@ -306,13 +341,17 @@ class PPOAgent:
     def get_episode_length_curve(self):
         return self.episode_length_curve
     
+    def get_success_rate_curve(self):
+        return self.success_rate_curve
+    
     def get_policy_behavior_curve(self):
         return self.policy_behavior_curve
     
     def evaluate(self, num_episodes=10, render=False, log_video=False):
-        """Evaluate trained policy"""
+        '''Evaluate trained policy'''
         eval_rewards = []
         eval_lengths = []
+        eval_successes = []
         
         # Video logging setup for wandb
         if log_video and self.logger.use_wandb and hasattr(self.env, 'render'):
@@ -342,6 +381,9 @@ class PPOAgent:
                 
                 obs, reward, terminated, truncated, _ = self.env.step(action.cpu().numpy())
                 done = terminated or truncated
+                if done:
+                    success = terminated 
+                    eval_successes.append(success)
                 ep_reward += reward
                 ep_length += 1
                 
@@ -349,15 +391,16 @@ class PPOAgent:
             
             eval_rewards.append(ep_reward)
             eval_lengths.append(ep_length)
-            print(f"Evaluation Episode {ep + 1}: Reward = {ep_reward}, Length = {ep_length}")
+            print(f'Evaluation Episode {ep + 1}: Reward = {ep_reward}, Length = {ep_length}')
         
         # Log evaluation metrics
         eval_metrics = {
-            "eval/mean_reward": np.mean(eval_rewards),
-            "eval/std_reward": np.std(eval_rewards),
-            "eval/max_reward": np.max(eval_rewards),
-            "eval/min_reward": np.min(eval_rewards),
-            "eval/mean_length": np.mean(eval_lengths)
+            'eval/mean_reward': np.mean(eval_rewards),
+            'eval/std_reward': np.std(eval_rewards),
+            'eval/max_reward': np.max(eval_rewards),
+            'eval/min_reward': np.min(eval_rewards),
+            'eval/mean_length': np.mean(eval_lengths),
+            'eval/success_rate': np.mean(eval_successes)
         }
         self.logger.log_metrics(eval_metrics, self.total_timesteps)
         
@@ -369,9 +412,9 @@ class PPOAgent:
         return np.mean(eval_rewards), np.std(eval_rewards)
     
     def save_model(self, path=None):
-        """Save the trained model"""
+        '''Save the trained model'''
         if path is None:
-            path = f"{self.logger.experiment_name}_model.pth"
+            path = f'{self.logger.experiment_name}_model.pth'
         
         torch.save({
             'model_state_dict': self.network.state_dict(),
@@ -389,5 +432,5 @@ class PPOAgent:
         
 
         
-        print(f"Model saved as '{path}'")
+        print(f'Model saved as "{path}"')
         return path

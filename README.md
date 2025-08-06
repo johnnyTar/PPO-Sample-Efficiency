@@ -2,6 +2,9 @@
 
 ## Setup Instructions
 
+### TODO
+**python train.py --track --tensorboard --total-timesteps 500000 --rollout-size 1024 --gym-id MiniGrid-DoorKey-6x6-v0**
+
 ### 1. Create and Activate Virtual Environment (Windows)
 ```bash
 python -m venv venv

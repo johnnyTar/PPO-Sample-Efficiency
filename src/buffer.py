@@ -2,7 +2,7 @@ import torch
 
 
 class PPOBuffer:
-    """Experience buffer for PPO"""
+    '''Experience buffer for PPO'''
     
     def __init__(self, size, obs_dim, device, gamma=0.99, lam=0.95):
         self.size = size
@@ -35,7 +35,7 @@ class PPOBuffer:
         self.ptr += 1
         
     def finish_path(self, last_val=0):
-        """Compute GAE-Lambda advantages and returns"""
+        '''Compute GAE-Lambda advantages and returns'''
         path_slice = slice(self.path_start_idx, self.ptr)
         path_len = self.ptr - self.path_start_idx
         
@@ -58,8 +58,9 @@ class PPOBuffer:
             else:
                 next_non_terminal = 1.0 - path_dones[t]
                 next_values = path_values[t + 1]
-                
+            # TD-error
             delta = path_rewards[t] + self.gamma * next_values * next_non_terminal - path_values[t]
+            # GAE calc
             gae = delta + self.gamma * self.lam * next_non_terminal * gae
             advantages[t] = gae
             
@@ -73,7 +74,7 @@ class PPOBuffer:
         self.path_start_idx = self.ptr
         
     def get_batch(self):
-        """Get all data with advantages normalized"""
+        '''Get all data with advantages normalized'''
         assert self.ptr == self.size
         self.ptr = 0
         self.path_start_idx = 0
