@@ -3,7 +3,11 @@
 Implementation of Proximal Policy Optimization enhanced with Self-Imitation Learning for improved sample efficiency in sparse reward environments. This project combines the stability of PPO with SIL ability to learn from past successful experiences through prioritized replay, tested on MiniGrid environments.
 
 
-![Demo](src/other/rl-video-episode-24750.gif)
+<div align="center">
+  <img src="src/other/rl-video-episode-24750.gif" alt="Demo" />
+  <br>
+  <em>Trained agent with SIL solving MiniGrid-DoorKey-8x8-v0</em>
+</div>
 ## Project Overview
 
 **Research Question**: Can the integration of experience replay buffers or
