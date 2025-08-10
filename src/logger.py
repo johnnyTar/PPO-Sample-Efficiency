@@ -5,7 +5,9 @@ from datetime import datetime
 
 
 class PPOLogger:
-    '''Handles logging for PPO training with WandB and TensorBoard support'''
+    '''
+    Handles logging for PPO training with WandB and TensorBoard support
+    '''
     
     def __init__(self, experiment_name=None, use_wandb=True, use_tensorboard=True, 
                 env=None, network=None, config=None):
@@ -13,6 +15,9 @@ class PPOLogger:
         self.use_tensorboard = use_tensorboard
         
         self.experiment_name = experiment_name
+        
+        # Store configation
+        self.config = config if config is not None else {}
         
         # Setup logging
         self._setup_wandb(env, network, config)
@@ -32,7 +37,7 @@ class PPOLogger:
                 wandb_config.update(config)
                 
             wandb.init(
-                project='ppo-minigrid',
+                project='ppo-minigrid',# Project name
                 name=self.experiment_name,
                 config=wandb_config
             )

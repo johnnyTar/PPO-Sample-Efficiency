@@ -39,7 +39,7 @@ def plot_learning_curves(results_data, title='PPO Learning Curves Across Seeds',
 
     legend_elements = [
         Line2D([0], [0], color='gray', alpha=0.3, linewidth=1, label='Individual Seeds'),
-        Line2D([0], [0], color='blue', linewidth=2.5, label='Mean ± 95% CI')
+        Line2D([0], [0], color='blue', linewidth=2.5, label='Mean')
     ]
     plt.legend(handles=legend_elements, loc='lower right')
     plt.tight_layout()
@@ -83,7 +83,7 @@ def plot_episode_length_curves(results_data, title='Average Episode Length Acros
 
     legend_elements = [
         Line2D([0], [0], color='gray', alpha=0.3, linewidth=1, label='Individual Seeds'),
-        Line2D([0], [0], color='green', linewidth=2.5, label='Mean ± 95% CI')
+        Line2D([0], [0], color='green', linewidth=2.5, label='Mean')
     ]
     plt.legend(handles=legend_elements, loc='upper right')
     plt.tight_layout()
@@ -123,7 +123,7 @@ def plot_success_rate_curves(results_data, title='Success Rate Across Seeds', sa
 
     legend_elements = [
         Line2D([0], [0], color='gray', alpha=0.3, linewidth=1, label='Individual Seeds'),
-        Line2D([0], [0], color='orange', linewidth=2.5, label='Mean ± 95% CI')
+        Line2D([0], [0], color='orange', linewidth=2.5, label='Mean')
     ]
     plt.legend(handles=legend_elements, loc='lower right')
     plt.tight_layout()
@@ -172,7 +172,7 @@ def plot_policy_behavior_curves(results_data, metric, title=None, save_path=None
 
     legend_elements = [
         Line2D([0], [0], color='gray', alpha=0.3, linewidth=1, label='Individual Seeds'),
-        Line2D([0], [0], color='red', linewidth=2.5, label='Mean ± 95% CI')
+        Line2D([0], [0], color='red', linewidth=2.5, label='Mean')
     ]
     plt.legend(handles=legend_elements, loc='best')
     plt.tight_layout()
@@ -185,7 +185,7 @@ def plot_policy_behavior_curves(results_data, metric, title=None, save_path=None
 
 # Example usage
 if __name__ == '__main__':
-    json_path = 'results/MiniGrid-DoorKey-5x5-v0_results.json'
+    json_path = 'results/MiniGrid-DoorKey-8x8-v0_SIL_results.json'
     
     with open(json_path, 'r') as f:
         results = json.load(f)
