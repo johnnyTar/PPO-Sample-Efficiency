@@ -10,7 +10,7 @@ Implementation of Proximal Policy Optimization enhanced with Self-Imitation Lear
   <p><em>Trained agent with SIL solving MiniGrid-DoorKey-8x8-v0</em></p>
 </div>
 
-[Trained agent with SIL solving MiniGrid-DoorKey-8x8-v0](src/other/rl-video-episode-24750.mp4)
+[Trained agent with SIL solving MiniGrid-DoorKey-8x8-v0](thumbnail.png)](src/other/rl-video-episode-24750.mp4)
 
 ## Project Overview
 
