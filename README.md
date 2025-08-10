@@ -8,6 +8,7 @@ Implementation of Proximal Policy Optimization enhanced with Self-Imitation Lear
   <br>
   <em>Trained agent with SIL solving MiniGrid-DoorKey-8x8-v0</em>
 </div>
+
 ## Project Overview
 
 **Research Question**: Can the integration of experience replay buffers or
