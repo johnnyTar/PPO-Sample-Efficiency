@@ -1,4 +1,4 @@
-# PPO with Self-Imitation Learning
+# PPO with Self-Imitation Learning and Random Network Distillation
 
 Implementation of Proximal Policy Optimization enhanced with Self-Imitation Learning for improved sample efficiency in sparse reward environments. This project combines the stability of PPO with SIL ability to learn from past successful experiences through prioritized replay, tested on MiniGrid environments.
 
@@ -65,6 +65,25 @@ python train.py --sil true --track --tensorboard --total-timesteps 1000000 --see
 python train.py --sil true --sil-lr 1e-4 --sil-buffer-size 10000 --success-threshold 0.8
 ```
 
+
+### Training with RND Enhancement
+```bash
+python train.py --use-rnd --gym-id MiniGrid-DoorKey-8x8-v0 --total-timesteps 1000000
+```
+
+### Full Experiment with Multiple Seeds (RND)
+```bash
+python train.py --use-rnd --track --tensorboard --total-timesteps 1000000 --seeds 0 1 2 3 4 5 6 7 8 9
+```
+
+### Hyperparameter Tuning Example (RND)
+```bash
+python train.py --use-rnd --rnd-lr 1e-4 --intrinsic-coef 0.5 --rnd-embed-dim 128
+```
+
+
+
+
 ## Configuration Parameters
 
 ### Core Training
@@ -90,6 +109,15 @@ python train.py --sil true --sil-lr 1e-4 --sil-buffer-size 10000 --success-thres
 - `--success-threshold`: Success threshold for SIL buffer (default: 0.8)
 - `--sil-warmup-episodes`: Episodes before SIL starts (default: 50)
 
+### RND Specific
+- `--use-rnd`: Enable/disable intrinsic reward
+- `--rnd-lr`: RND predictor learning rate (default: 1e-4)
+- `--intrinsic-coef`: Scaling factor for intrinsic reward (default: 0.5)
+- `--rnd-embed-dim`: RND embedding dimension (default: 128)
+- `--rnd-update-epochs`: RND predictor update epochs per PPO update (default: 1)
+- `--rnd-obs-norm`: Normalize observations for RND (default: True)
+- `--rnd-rew-norm`: Normalize intrinsic rewards (default: True)
+
 ### Environment & Logging
 - `--gym-id`: MiniGrid environment (DoorKey-8x8-v0)
 - `--track`: Enable WandB logging
@@ -110,11 +138,14 @@ python train.py --sil true --sil-lr 1e-4 --sil-buffer-size 10000 --success-thres
 ├── results/              # Training results (JSON)
 ├── models/               # Saved model checkpoints
 ├── videos/               # Episode recordings
-└── runs/                 # TensorBoard logs
+├── runs/                 # TensorBoard logs
+├── rnd.py                # RND neural network
+├── rnd_agent.py          # PPO+RND agent implementation
+└── rnd_buffer/           # PPO+RND rollout buffer
 ```
 
 ## Results
-
+### Self-Imitation Learning (SIL)
 Based on our experiments on MiniGrid-DoorKey environments:
 
 - **Sample Efficiency**: PPO+SIL achieves ~50% higher success rates vs vanilla PPO
@@ -133,6 +164,21 @@ The following plots demonstrate the performance comparison between PPO with and 
 
 The learning curves clearly show the improved sample efficiency and faster convergence on MiniGrid-doorKey-8x8 achieved by incorporating Self-Imitation Learning into the PPO algorithm. The PPO+SIL agent demonstrates more stable learning and reaches higher success rates compared to vanilla PPO.
 
+### Random Network Distillation (RND)
+Our results show a clear trade-off with RND that depends on task complexity.
+
+- On the simpler `DoorKey-6x6` task, RND improves sample efficiency, allowing the agent to learn much faster, but at the cost of higher variance and a slightly lower final reward.
+
+- On the harder `DoorKey-8x8` task, RND is detrimental. The intrinsic curiosity bonus distracts the agent, leading to worse performance than the baseline PPO.
+
+<div align="center">
+  <img src="src/other/rnd_8x8.png" alt="PPO with RND Learning Curve" width="45%" style="display: inline-block; margin-right: 2%;"/>
+  <img src="src/other/baseline_qasim.png" alt="PPO Learning Curve" width="45%" style="display: inline-block; margin-left: 2%;"/>
+  <br>
+  <em>PPO with RND (left) vs Standard PPO (right) </em>
+</div>
+
+The learning curves shows the RND's performance is worse, because its intrinsic reward becomes a distraction. By rewarding visits to any new state, not just those on the solution path, it traps the agent in pointless exploration loops, preventing it from focusing on the actual task.
 ## Monitoring Training
 
 ### View TensorBoard Logs
@@ -168,9 +214,11 @@ Results are automatically saved to:
 
 - **MiniGrid-DoorKey-6x6-v0**: Basic key collection and door opening
     - PPO without SIL was able to solve the env
+    - RND speeds up learning but increases variance.
 - **MiniGrid-DoorKey-8x8-v0**: Larger environment with increased complexity
     - Vanilla PPO could not solve it
     - PPO with SIL solved it
+    - PPO with RND performs worse than vanilla PPO.
 - **Other variations**: Lava Gap and Empty were easy for PPO
 
 ## Code
@@ -183,3 +231,4 @@ This code is inspired by
 - [Proximal Policy Optimization](https://arxiv.org/abs/1707.06347)
 - [Self-Imitation Learning](https://proceedings.mlr.press/v80/oh18b.html)
 - [MiniGrid Environments](https://github.com/Farama-Foundation/MiniGrid)
+- [Random Network Distillation](https://arxiv.org/abs/1810.12894)
