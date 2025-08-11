@@ -112,7 +112,6 @@ class SILBuffer:
                 # Differentiates between trajectories of same final reward
                 new_reward = base_reward + progress_bonus + 0.01
             else:
-                print('For failed episodes, dont add positive')
                 # For failed episodes, dont add positive 
                 new_reward = base_reward
             

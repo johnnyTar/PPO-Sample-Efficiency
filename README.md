@@ -119,8 +119,19 @@ Based on our experiments on MiniGrid-DoorKey environments:
 
 - **Sample Efficiency**: PPO+SIL achieves ~50% higher success rates vs vanilla PPO
 - **Convergence Speed**: ~30% faster convergence to stable performance
-- **Final Performance**: Success rates improve from 0.65 (PPO) to 0.82 (PPO+SIL)
-- **Episode Efficiency**: 15-20% shorter successful episodes
+- **Final Performance**: Success rates (> 0.9 reward) improve from 0.05 (PPO) to 0.62 (PPO+SIL)
+- **Episode Efficiency**: 50% shorter successful episodes
+
+The following plots demonstrate the performance comparison between PPO with and without Self-Imitation Learning:
+
+<div align="center">
+  <img src="src/other/PPO_SIL_Learning_Curve.png" alt="PPO with SIL Learning Curve" width="45%" style="display: inline-block; margin-right: 2%;"/>
+  <img src="src/other/PPO_Learning_Curve.png" alt="PPO Learning Curve" width="45%" style="display: inline-block; margin-left: 2%;"/>
+  <br>
+  <em>PPO with Self-Imitation Learning (left) vs Standard PPO (right) </em>
+</div>
+
+The learning curves clearly show the improved sample efficiency and faster convergence on MiniGrid-doorKey-8x8 achieved by incorporating Self-Imitation Learning into the PPO algorithm. The PPO+SIL agent demonstrates more stable learning and reaches higher success rates compared to vanilla PPO.
 
 ## Monitoring Training
 

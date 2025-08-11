@@ -4,7 +4,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import json
 from matplotlib.lines import Line2D
-
+'''
+We used an LLM to generate this code.
+'''
 
 def plot_learning_curves_from_json(json_path, title='PPO Learning Curves Across Seeds', save_path=None):
     with open(json_path, 'r') as f:
