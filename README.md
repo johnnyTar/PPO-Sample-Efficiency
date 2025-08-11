@@ -225,6 +225,8 @@ Results are automatically saved to:
 This code is inspired by
 
 - [Huggingface PPO code](https://huggingface.co/learn/deep-rl-course/unit8/hands-on-cleanrl)
+- [Huggingface PPO code](https://github.com/TianhongDai/self-imitation-learning-pytorch)
+
 
 ## References
 
