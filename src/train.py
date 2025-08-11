@@ -9,6 +9,7 @@ import time
 # Import both agent types from the new separate files
 from agent import PPOAgent
 from sil_agent import PPOSILAgent
+from rnd_agent import PPORNDAgent
 from utils import set_seed
 import numpy as np
 import json
@@ -93,6 +94,30 @@ def parse_args():
                         help='SIL update frequency (every N PPO updates)')
     
     # =================================================================
+    #  RND arguments
+    # =================================================================
+    parser.add_argument('--use-rnd', action='store_true', default=False,
+                        help='Enable RND intrinsic rewards')
+    
+    parser.add_argument('--intrinsic-coef', type=float, default=0.5,
+                        help='Scale for intrinsic reward')
+    
+    parser.add_argument('--rnd-embed-dim', type=int, default=128,
+                        help='Embedding dimension for RND')
+    
+    parser.add_argument('--rnd-lr', type=float, default=1e-4,
+                        help='Learning rate for RND predictor')
+    
+    parser.add_argument('--rnd-obs-norm', action='store_true', default=True,
+                        help='Normalize observations for RND')
+    
+    parser.add_argument('--rnd-rew-norm', action='store_true', default=True,
+                        help='Normalize intrinsic reward')
+    
+    parser.add_argument('--rnd-update-epochs', type=int, default=1,
+                        help='Extra predictor-only passes per PPO update')
+    
+    # =================================================================
     # Logging and Monitoring
     # =================================================================
     parser.add_argument('--track', action='store_true', default=False,
@@ -171,6 +196,30 @@ def train_single_seed(args, seed):
             use_tensorboard=args.tensorboard,
             experiment_name=run_name
         )
+    elif args.use_rnd:
+        print(f"PPO+RND {seed}")
+        agent = PPORNDAgent(
+        env, 
+        hidden_dim=256, 
+        seed=seed,
+        lr=args.learning_rate,
+        gamma=args.gamma,
+        lam=args.gae_lambda,
+        clip_ratio=args.clip_coef,
+        ent_coef=args.ent_coef,
+        vf_coef=args.vf_coef,
+        batch_size=args.batch_size,
+        use_wandb=args.track,
+        use_tensorboard=args.tensorboard,
+        experiment_name=run_name,
+        use_rnd=args.use_rnd,
+        intrinsic_coef=args.intrinsic_coef,
+        rnd_embed_dim=args.rnd_embed_dim,
+        rnd_lr=args.rnd_lr,
+        rnd_obs_norm=args.rnd_obs_norm,
+        rnd_rew_norm=args.rnd_rew_norm,
+        rnd_update_epochs=args.rnd_update_epochs
+    )
     else:
         print(f"PPO {seed}")
         agent = PPOAgent(
