@@ -297,6 +297,10 @@ class PPOSILAgent(PPOAgent):
             masked_new_values = new_values.squeeze()[positive_mask]
             masked_returns = returns[positive_mask]
             
+            # Skip if no valid transitions after masking
+            if len(masked_advantages) == 0:
+                continue
+            
             '''
             # ========== ORIGINAL SIL FORMULATION ==========
             # Policy loss: -log π(a|s) * (R - V(s))+
@@ -312,10 +316,6 @@ class PPOSILAgent(PPOAgent):
             
             # Total SIL loss (no entropy regularization in original SIL)
             sil_loss = policy_loss + 0.5 * value_loss
-            
-            # Skip if no valid transitions after masking
-            if len(masked_advantages) == 0:
-                continue
                 '''
             # Policy loss with clipping (only positive)
             ratio = torch.exp(masked_new_log_probs - masked_old_log_probs)
