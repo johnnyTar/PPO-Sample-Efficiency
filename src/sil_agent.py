@@ -297,10 +297,26 @@ class PPOSILAgent(PPOAgent):
             masked_new_values = new_values.squeeze()[positive_mask]
             masked_returns = returns[positive_mask]
             
+            '''
+            # ========== ORIGINAL SIL FORMULATION ==========
+            # Policy loss: -log π(a|s) * (R - V(s))+
+            # This is simple policy gradient weighted by positive advantages
+            policy_loss = -masked_new_log_probs * masked_advantages
+            
+            # Weight by importance sampling weights from prioritized replay
+            policy_loss = (policy_loss * masked_weights).mean()
+            
+            # Value loss: 0.5 * ||(R - V(s))+||^2
+            value_loss = F.mse_loss(masked_new_values, masked_returns, reduction='none')
+            value_loss = (value_loss * masked_weights).mean()
+            
+            # Total SIL loss (no entropy regularization in original SIL)
+            sil_loss = policy_loss + 0.5 * value_loss
+            
             # Skip if no valid transitions after masking
             if len(masked_advantages) == 0:
                 continue
-                
+                '''
             # Policy loss with clipping (only positive)
             ratio = torch.exp(masked_new_log_probs - masked_old_log_probs)
             clipped_ratio = torch.clamp(ratio, 1 - self.sil_clip_ratio, 1 + self.sil_clip_ratio)
